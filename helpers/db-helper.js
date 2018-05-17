@@ -9,7 +9,7 @@ let mysqlOptions = {
   host: '127.0.0.1',
   user: 'root',
   password: 'root',
-  database: 'blockchain',
+  database: 'db_exchange_coins',
   socketPath: false,
   connectionLimit: 5
 };

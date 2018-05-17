@@ -11,9 +11,9 @@ let blockchainApi = require('./routes/blockchain-api');
 
 let app = express();
 let cors = require('cors');
-let mwWebSocket = require('./modules/api-socket');
+// let mwWebSocket = require('./modules/api-socket');
 app.use(cors({credentials: true}));
-app.use(mwWebSocket.Listen);
+// app.use(mwWebSocket.Listen);
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'twig');
@@ -32,7 +32,7 @@ app.use(sassMiddleware({
 }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/api', blockchain);
+app.use('/api', blockchainApi);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
