@@ -10,8 +10,8 @@ coreApiRoute.post('/register', function (req, res) {
 });
 
 // Api exchange
-coreApiRoute.post('/btc-to-xu', function (req, res) {
-  apiExchange.btcToXu(req, res);
+coreApiRoute.post('/coin-to-xu', function (req, res) {
+  apiExchange.coinToXu(req, res);
 });
 
 

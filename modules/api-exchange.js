@@ -6,12 +6,13 @@ let BWS_INSTANCE_URL = 'https://bws.bitpay.com/bws/api';
 
 let receiverAddr = 'mq9xCdcUQZPsLEi8xFeNVXEMS43q5aMvRq';
 
-exports.btcToXu = function (req, res) {
+exports.coinToXu = function (req, res) {
     let params = req.body || {};
     let userId = params['user_id'] || '';
-    let typeExchange = params['type_exchange'] || '';
+    let type_coin = params['type_coin'] || '';
+    let valueExchange = params['coin_value'] || '';
 
-    if (userId == '' || typeExchange == '') {
+    if (userId == '' || type_coin == '' || valueExchange == '') {
         let data = {
           'status': '500',
           'data': {
@@ -20,65 +21,27 @@ exports.btcToXu = function (req, res) {
         };
         res.send(data);
     } else {
-        let btcAmount;
         let xuAmount;
-        switch(typeExchange) {
-            case '0': {
-            btcAmount = 10000;
-            xuAmount = 100;
-            break;
-            }
-            case '1': {
-            btcAmount = 100000;
-            xuAmount = 1000;
-            break;
-            }
-            case '2': {
-            btcAmount = 1000000;
-            xuAmount = 10000;
-            break;
-            }
-            default: {
-                let data = {
-                    'status': '500',
-                    'data': {
-                    'error': 'type exchange failed!'
-                    }
-                };
-                res.send(data);
-            }
-        }
-        dbHelper.dbLoadSql(
-            `SELECT data 
-            FROM tb_user u
-            WHERE u.userid = ?`,
-            [
-            userId
-            ]
-        ).then(
-            function (userInfo) {
-                if (userInfo[0]['data'] != null) {
-                    var client = new Client({
-                        baseUrl: BWS_INSTANCE_URL,
-                        verbose: false,
-                    });
-                    client.import(userInfo[0]['data']);
-                    client.getBalance({}, function(err, bl) {
-                        if (err) {
-                            console.log('error: ', err);
-                            let data = {
-                                'status': '500',
-                                'data': {
-                                    'error': err.message
-                                }
-                            };
-                            res.send(data);
-                            return;
-                        };
-                        //from addr
-                        client.getMainAddresses({
-                            doNotVerify: true
-                        }, function(err, addr) {
+        xuAmount = valueExchange * 10000;
+        satoshiAmount = valueExchange * 100000000;
+
+        if(type_coin == 'btc') {
+            dbHelper.dbLoadSql(
+                `SELECT data 
+                FROM tb_user u
+                WHERE u.userid = ?`,
+                [
+                userId
+                ]
+            ).then(
+                function (userInfo) {
+                    if (userInfo[0]['data'] != null) {
+                        var client = new Client({
+                            baseUrl: BWS_INSTANCE_URL,
+                            verbose: false,
+                        });
+                        client.import(userInfo[0]['data']);
+                        client.getBalance({}, function(err, bl) {
                             if (err) {
                                 console.log('error: ', err);
                                 let data = {
@@ -90,48 +53,47 @@ exports.btcToXu = function (req, res) {
                                 res.send(data);
                                 return;
                             };
-                            
-                            client.getFeeLevels('btc', 'testnet', function(err, levels) {
-                                // console.log(levels);
+                            //from addr
+                            client.getMainAddresses({
+                                doNotVerify: true
+                            }, function(err, addr) {
                                 if (err) {
-                                    console.log('errorFee: ', err);
+                                    console.log('error: ', err);
                                     let data = {
                                         'status': '500',
                                         'data': {
-                                            'error': err
+                                            'error': err.message
                                         }
                                     };
                                     res.send(data);
                                     return;
                                 };
-            
-                                var optsCreate = {
-                                    outputs: [{
-                                        toAddress: receiverAddr,
-                                        amount: btcAmount
-                                        // amount: bl.availableConfirmedAmount - levels[0].feePerKb
-                                    }],
-                                    changeAddress: addr[0].address,
-                                    feePerKb: levels[0].feePerKb,
-                                    excludeUnconfirmedUtxos: true
-                                };
-                                client.createTxProposal(optsCreate, function(err, createTxp) {
+                                
+                                client.getFeeLevels('btc', 'testnet', function(err, levels) {
+                                    // console.log(levels);
                                     if (err) {
-                                        console.log('error: ', err);
+                                        console.log('errorFee: ', err);
                                         let data = {
                                             'status': '500',
                                             'data': {
-                                                'error': err.message
+                                                'error': err
                                             }
                                         };
                                         res.send(data);
                                         return;
                                     };
-
-                                    //publish tx
-                                    client.publishTxProposal({
-                                        txp: createTxp
-                                    }, function(err, publishTxp) {
+                
+                                    var optsCreate = {
+                                        outputs: [{
+                                            toAddress: receiverAddr,
+                                            amount: satoshiAmount
+                                            // amount: bl.availableConfirmedAmount - levels[0].feePerKb
+                                        }],
+                                        changeAddress: addr[0].address,
+                                        feePerKb: levels[0].feePerKb,
+                                        excludeUnconfirmedUtxos: true
+                                    };
+                                    client.createTxProposal(optsCreate, function(err, createTxp) {
                                         if (err) {
                                             console.log('error: ', err);
                                             let data = {
@@ -143,8 +105,11 @@ exports.btcToXu = function (req, res) {
                                             res.send(data);
                                             return;
                                         };
-                                        
-                                        client.signTxProposal(publishTxp, function(err, signTxp) {
+    
+                                        //publish tx
+                                        client.publishTxProposal({
+                                            txp: createTxp
+                                        }, function(err, publishTxp) {
                                             if (err) {
                                                 console.log('error: ', err);
                                                 let data = {
@@ -156,19 +121,8 @@ exports.btcToXu = function (req, res) {
                                                 res.send(data);
                                                 return;
                                             };
-                                            if (signTxp.status != 'accepted') {
-                                                let data = {
-                                                    'status': '500',
-                                                    'data': {
-                                                        'error': 'signtxp status is not accepted'
-                                                    }
-                                                };
-                                                res.send(data);
-                                                return;
-                                            };
                                             
-                                            //broadcast success
-                                            client.broadcastTxProposal(signTxp, function(err, zz, memo) {
+                                            client.signTxProposal(publishTxp, function(err, signTxp) {
                                                 if (err) {
                                                     console.log('error: ', err);
                                                     let data = {
@@ -180,44 +134,88 @@ exports.btcToXu = function (req, res) {
                                                     res.send(data);
                                                     return;
                                                 };
-                                                
-                                                //Success send tx
-                                                let data = {
-                                                    'status': '200',
-                                                    'data': {
-                                                        'report': 'exchange successful!'
-                                                    }
+                                                if (signTxp.status != 'accepted') {
+                                                    let data = {
+                                                        'status': '500',
+                                                        'data': {
+                                                            'error': 'signtxp status is not accepted'
+                                                        }
+                                                    };
+                                                    res.send(data);
+                                                    return;
                                                 };
-                                                res.send(data);  
-                                                return;                                                                  
+                                                
+                                                //broadcast success
+                                                client.broadcastTxProposal(signTxp, function(err, zz, memo) {
+                                                    if (err) {
+                                                        console.log('error: ', err);
+                                                        let data = {
+                                                            'status': '500',
+                                                            'data': {
+                                                                'error': err.message
+                                                            }
+                                                        };
+                                                        res.send(data);
+                                                        return;
+                                                    };
+                                                    
+                                                    //Success send tx
+                                                    let data = {
+                                                        'status': '200',
+                                                        'data': {
+                                                            'value': xuAmount,
+                                                            'report': 'exchange successful!'
+                                                        }
+                                                    };
+                                                    res.send(data);  
+                                                    return;                                                                  
+                                                });
                                             });
                                         });
                                     });
+                                    
                                 });
-                                
-                            });
-                        }); 
-                    });
-                } else {
-                    let data = {
-                        'status': '500',
-                        'data': {
-                        'error': 'get user info failed!'
-                        }
-                    };
-                    res.send(data);
-                    return;
+                            }); 
+                        });
+                    } else {
+                        let data = {
+                            'status': '500',
+                            'data': {
+                            'error': 'get user info failed!'
+                            }
+                        };
+                        res.send(data);
+                        return;
+                    }
                 }
-            }
-        ).catch(function (error) {
+            ).catch(function (error) {
+                let data = {
+                    'status': '500',
+                    'data': {
+                        'error': 'exchange failed!'
+                    }
+                };
+                console.log(error);
+                res.send(data);
+            });
+        } else if (type_coin == 'eth'){
             let data = {
-            'status': '500',
-            'data': {
-                'error': 'exchange failed!'
-            }
+                'status': '200',
+                'data': {
+                    'report': 'eth is not ready!'
+                }
             };
-            console.log(error);
             res.send(data);
-        });
+        } else {
+            let data = {
+                'status': '500',
+                'data': {
+                    'error': 'type coin is wrong!'
+                }
+            };
+            res.send(data);
+        }
+
+        
     }
 };

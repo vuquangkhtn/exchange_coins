@@ -11,7 +11,7 @@ let blockchainApi = require('./routes/blockchain-api');
 
 let app = express();
 let cors = require('cors');
-// let mwWebSocket = require('./modules/api-socket');
+let mwWebSocket = require('./modules/api-socket');
 app.use(cors({credentials: true}));
 // app.use(mwWebSocket.Listen);
 // view engine setup
