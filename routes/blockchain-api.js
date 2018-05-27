@@ -14,5 +14,8 @@ coreApiRoute.post('/coin-to-xu', function (req, res) {
   apiExchange.coinToXu(req, res);
 });
 
+coreApiRoute.post('/xu-to-coin', function (req, res) {
+  apiExchange.xuToCoin(req, res);
+});
 
 module.exports = coreApiRoute;
