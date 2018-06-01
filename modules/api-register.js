@@ -58,7 +58,7 @@ exports.register = function (req, res) {
               res.send(data);
             } else {
               let data = {
-                'status': '500',
+                'status': '501',
                 'data': {
                   'error': 'signup failed!'
                 }
@@ -68,7 +68,7 @@ exports.register = function (req, res) {
           }
         ).catch(function (error) {
           let data = {
-            'status': '500',
+            'status': '502',
             'data': {
               'error': 'signup failed!'
             }
