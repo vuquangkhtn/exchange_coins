@@ -29,6 +29,7 @@
     "xoauth2": "^1.2.0",
     "bitcoinjs-lib": "^3.3.2",
     "bitcore-lib": "^0.15.0",
-    "bitcore-wallet-client": "^6.7.2"
+    "bitcore-wallet-client": "^6.7.2",
+    "socket.io-client":"2.1.1"
   }
 }
