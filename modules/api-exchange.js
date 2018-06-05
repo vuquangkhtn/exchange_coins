@@ -6,10 +6,14 @@ let BWS_INSTANCE_URL = 'https://bws.bitpay.com/bws/api';
 
 let receiverAddr = 'mq9xCdcUQZPsLEi8xFeNVXEMS43q5aMvRq';
 
+let coinType = {
+    btc: "BTC",
+    eth: "ETH"
+}
 exports.coinToXu = function (req, res) {
     let params = req.body || {};
     let userId = params['user_id'] || '';
-    let type_coin = params['type_coin'] || '';
+    let type_coin = params['type_coin'].toUpperCase() || '';
     let valueExchange = params['coin_value'] || '';
 
     if (userId == '' || type_coin == '' || valueExchange == '') {
@@ -25,7 +29,7 @@ exports.coinToXu = function (req, res) {
         xuAmount = valueExchange * 10000;
         satoshiAmount = valueExchange * 100000000;
 
-        if(type_coin == 'btc') {
+        if(type_coin == coinType.btc) {
             dbHelper.dbLoadSql(
                 `SELECT data 
                 FROM tb_user u
@@ -198,7 +202,7 @@ exports.coinToXu = function (req, res) {
                 console.log(error);
                 res.send(data);
             });
-        } else if (type_coin == 'eth'){
+        } else if (type_coin == coinType.eth){
             let data = {
                 'status': '200',
                 'data': {
@@ -223,7 +227,7 @@ exports.coinToXu = function (req, res) {
 exports.xuToCoin = function (req, res) {
     let params = req.body || {};
     let userId = params['user_id'] || '';
-    let type_coin = params['type_coin'] || '';
+    let type_coin = params['type_coin'].toUpperCase() || '';
     let valueExchange = params['xu_value'] || '';
 
     if (userId == '' || type_coin == '' || valueExchange == '') {
@@ -239,7 +243,7 @@ exports.xuToCoin = function (req, res) {
         xuAmount = valueExchange;
         satoshiAmount = xuAmount * 10000;
 
-        if(type_coin == 'btc') {
+        if(type_coin == coinType.btc) {
             dbHelper.dbLoadSql(
                 `SELECT data 
                 FROM tb_user u
@@ -431,7 +435,7 @@ exports.xuToCoin = function (req, res) {
                 console.log(error);
                 res.send(data);
             });
-        } else if (type_coin == 'eth'){
+        } else if (type_coin == coinType.eth){
             let data = {
                 'status': '200',
                 'data': {
