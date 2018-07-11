@@ -10,3 +10,8 @@ create table tb_user(
 	userid int auto_increment key,
     data text
 )
+
+create table tb_unconfirm_trans(
+	id int auto_increment key,
+    tran_id text key
+)

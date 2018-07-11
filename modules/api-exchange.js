@@ -3,6 +3,7 @@ let Client = require('bitcore-wallet-client');
 
 // var BWS_INSTANCE_URL = 'http://43.239.149.130:3232/bws/api';
 let BWS_INSTANCE_URL = 'https://bws.bitpay.com/bws/api';
+let SATOSHI_PER_BTC = 100000000;
 
 let receiverAddr = 'mq9xCdcUQZPsLEi8xFeNVXEMS43q5aMvRq';
 
@@ -10,6 +11,7 @@ let coinType = {
     btc: "BTC",
     eth: "ETH"
 }
+
 exports.coinToXu = function (req, res) {
     let params = req.body || {};
     let userId = params['user_id'] || '';
@@ -25,9 +27,10 @@ exports.coinToXu = function (req, res) {
         };
         res.send(data);
     } else {
-        let xuAmount;
-        xuAmount = valueExchange * 10000;
-        satoshiAmount = valueExchange * 100000000;
+        //get rate here
+        let xuPerBTC = 10000;//test
+        let xuAmount = valueExchange * xuPerBTC;
+        satoshiAmount = valueExchange * SATOSHI_PER_BTC;
 
         if(type_coin == coinType.btc) {
             dbHelper.dbLoadSql(
@@ -162,16 +165,33 @@ exports.coinToXu = function (req, res) {
                                                         res.send(data);
                                                         return;
                                                     };
-                                                    
-                                                    //Success send tx
-                                                    let data = {
-                                                        'status': '200',
-                                                        'data': {
-                                                            'value': xuAmount,
-                                                            'report': 'exchange successful!'
+                                                    //save id to unconfirm table to check confirm amount
+                                                    dbHelper.dbLoadSql(
+                                                        `INSERT INTO tb_unconfirm_trans (
+                                                            tran_id)
+                                                          VALUES (?)`,
+                                                          [
+                                                            signTxp.txid
+                                                          ]
+                                                      ).then(
+                                                        function (tranInfo) {
+                                                            if (tranInfo.insertId > 0) {
+                                                                console.log("insert success"); 
+                                                                //Success send tx
+                                                                let data = {
+                                                                    'status': '200',
+                                                                    'data': {
+                                                                        'value': xuAmount,
+                                                                        'report': 'exchange successful!'
+                                                                    }
+                                                                };
+                                                                res.send(data);
+                                                            }
                                                         }
-                                                    };
-                                                    res.send(data);  
+                                                      ).catch(function (error) {
+                                                          res.send(error);
+                                                        }
+                                                      );
                                                     return;                                                                  
                                                 });
                                             });
@@ -239,9 +259,10 @@ exports.xuToCoin = function (req, res) {
         };
         res.send(data);
     } else {
-        let xuAmount;
-        xuAmount = valueExchange;
-        satoshiAmount = xuAmount * 10000;
+        //get rate here
+        let xuPerBTC = 10000;//test
+        let xuAmount = valueExchange;
+        satoshiAmount = valueExchange * SATOSHI_PER_BTC / xuPerBTCratePerBTC;
 
         if(type_coin == coinType.btc) {
             dbHelper.dbLoadSql(
@@ -400,7 +421,7 @@ exports.xuToCoin = function (req, res) {
                                                         let data = {
                                                             'status': '200',
                                                             'data': {
-                                                                'value': satoshiAmount/100000000,
+                                                                'value': satoshiAmount/SATOSHI_PER_BTC,
                                                                 'report': 'exchange successful!'
                                                             }
                                                         };

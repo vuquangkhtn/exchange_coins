@@ -3,6 +3,7 @@ let Client = require('bitcore-wallet-client');
 
 // var BWS_INSTANCE_URL = 'http://43.239.149.130:3232/bws/api';
 let BWS_INSTANCE_URL = 'https://bws.bitpay.com/bws/api';
+let NETWORK = 'testnet';
 
 exports.register = function (req, res) {
   let params = req.body || {};
@@ -11,7 +12,7 @@ exports.register = function (req, res) {
     baseUrl: BWS_INSTANCE_URL,
     verbose: false,
   });
-  client.createWallet("My Wallet", "Irene", 1, 1, {network: 'testnet'}, function(err, secret) {
+  client.createWallet("My Wallet", "Irene", 1, 1, {network: NETWORK}, function(err, secret) {
     if (err) {
       let data = {
         'status': '500',
@@ -58,7 +59,7 @@ exports.register = function (req, res) {
               res.send(data);
             } else {
               let data = {
-                'status': '501',
+                'status': '500',
                 'data': {
                   'error': 'signup failed!'
                 }
@@ -68,7 +69,7 @@ exports.register = function (req, res) {
           }
         ).catch(function (error) {
           let data = {
-            'status': '502',
+            'status': '500',
             'data': {
               'error': 'signup failed!'
             }
