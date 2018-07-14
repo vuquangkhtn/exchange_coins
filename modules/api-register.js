@@ -1,6 +1,9 @@
 let dbHelper = require('../helpers/db-helper');
 let Client = require('bitcore-wallet-client');
 
+var ethers = require('ethers');
+var Wallet = ethers.Wallet;
+
 // var BWS_INSTANCE_URL = 'http://43.239.149.130:3232/bws/api';
 let BWS_INSTANCE_URL = 'https://bws.bitpay.com/bws/api';
 let NETWORK = 'testnet';
@@ -32,19 +35,33 @@ exports.register = function (req, res) {
           let data = {
             'status': '500',
             'data': {
-              'error': "create addr failed"
+              'error': "register failed"
             }
           };
           res.send(data);
           return;
         };
 
-        console.log('Addr:', addr);
+        console.log('BTC Addr:', addr);
+        var wallet = Wallet.createRandom();
+        if(wallet == undefined || wallet == null) {
+          console.log('error: ', err);
+          let data = {
+            'status': '500',
+            'data': {
+              'error': "register failed"
+            }
+          };
+          res.send(data);
+          return;
+        }
+        console.log("ETH Address: " + wallet.address);
         dbHelper.dbLoadSql(
-          `INSERT INTO tb_user (data)
-          VALUES (?)`,
+          `INSERT INTO tb_user (btc_encrypted,eth_key)
+          VALUES (?,?)`,
           [
-            walletStr
+            walletStr,
+            wallet.privateKey
           ]
         ).then(
           function (userInfo) {
