@@ -48,8 +48,8 @@ function checkForConfirm() {
                                 && t.txid == txp['tran_id']
                                 && t.confirmations >= ACCEPTED_CONFIRM_AMOUNT) {
                                 //send api request exchange coin here
-                                let checkSuccess = true;
-                                if(checkSuccess) {
+                                let sendApiSuccess = true;
+                                if(sendApiSuccess) {
                                     removeUnconfirmTran(t.txid);
                                 }
                             }

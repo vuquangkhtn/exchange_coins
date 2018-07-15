@@ -42,7 +42,6 @@ exports.register = function (req, res) {
           return;
         };
 
-        console.log('BTC Addr:', addr);
         var wallet = Wallet.createRandom();
         if(wallet == undefined || wallet == null) {
           console.log('error: ', err);
@@ -55,7 +54,7 @@ exports.register = function (req, res) {
           res.send(data);
           return;
         }
-        console.log("ETH Address: " + wallet.address);
+        
         dbHelper.dbLoadSql(
           `INSERT INTO tb_user (btc_encrypted,eth_key)
           VALUES (?,?)`,

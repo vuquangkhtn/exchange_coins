@@ -3,16 +3,18 @@ let Client = require('bitcore-wallet-client');
 var ethers = require('ethers');
 
 var Wallet = ethers.Wallet;
-var utils = ethers.utils;
 var providers = ethers.providers;
 
 // var BWS_INSTANCE_URL = 'http://43.239.149.130:3232/bws/api';
 let BWS_INSTANCE_URL = 'https://bws.bitpay.com/bws/api';
 let SATOSHI_PER_BTC = 100000000;
-let WEI_PER_ETH = 1000000000000000000;
 
 let receiverAddr = 'mq9xCdcUQZPsLEi8xFeNVXEMS43q5aMvRq';
-let receiverAddrETH = "0x890E8AB7926E2a3C6b47750A229Ff33F4E53F53b";
+let receiverAddrETH = "0xA25F70E5a425249F654cDF300EA31830C99EFa93";
+
+//testnet
+var network = providers.networks.ropsten;
+var provider = providers.getDefaultProvider(network);
 
 let coinType = {
     btc: "BTC",
@@ -246,30 +248,15 @@ exports.coinToXu = function (req, res) {
                     if (privateKey != null) {
                         //send trans
                         var wallet = new Wallet(privateKey);
-                        var transaction = {
-                            nonce: 0,
-                            gasLimit: 21000,
-                            gasPrice: utils.bigNumberify("20000000000"),
+                        wallet.provider = provider;
+                        var amount = ethers.utils.parseEther(valueExchange);
 
-                            to: receiverAddrETH,
-
-                            value: utils.parseEther(valueExchange),
-                            data: "0x",
-
-                            // This ensures the transaction cannot be replayed on different networks
-                            chainId: providers.networks.ropsten.chainId
-
-                        };
-
-                        var signedTransaction = wallet.sign(transaction);
-                        // This can now be sent to the Ethereum network
-                        var provider = providers.getDefaultProvider('ropsten');
-                        provider.sendTransaction(signedTransaction)
-                        .then(function(hash) {
-                            console.log('Hash: ' + hash);
+                        var sendPromise = wallet.send(receiverAddrETH, amount);
+                        sendPromise.then(function(hash) {
                             let data = {
                                 'status': '200',
                                 'data': {
+                                    'value': xuAmount,
                                     'report': 'exchange successfully'
                                 }
                             };
@@ -339,8 +326,7 @@ exports.xuToCoin = function (req, res) {
         if(type_coin == coinType.btc) {
             //get rate here
             let xuPerBTC = 10000;//test
-            let xuAmount = valueExchange;
-            satoshiAmount = valueExchange * SATOSHI_PER_BTC / xuPerBTCratePerBTC;
+            let satoshiAmount = valueExchange * SATOSHI_PER_BTC / xuPerBTC;
             dbHelper.dbLoadSql(
                 `SELECT btc_encrypted 
                 FROM tb_user u
@@ -535,7 +521,7 @@ exports.xuToCoin = function (req, res) {
             });
         } else if (type_coin == coinType.eth){
             let xuPerETH = 10000;//test
-            let ethAmount = valueExchange / xuPerETH;
+            let ethAmount = String(valueExchange / xuPerETH);
             dbHelper.dbLoadSql(
                 `SELECT eth_key 
                 FROM tb_user u
@@ -547,35 +533,20 @@ exports.xuToCoin = function (req, res) {
                 function (userInfo) {
                     let privateKey = userInfo[0]['eth_key'];
                     if (privateKey != null) {
-                        //send trans
                         var wallet = new Wallet(privateKey);
                         
-                        var fromWallet = new Wallet('0xf235e53657cafe945efd37c8d5f9853b06cc118c4a549403d89bd3e8a3bce572');
-                        var transaction = {
-                            nonce: 0,
-                            gasLimit: 21000,
-                            gasPrice: utils.bigNumberify("20000000000"),
+                        var fromWallet = new Wallet('0x29ea8ec0c0f532b96e7391716aecb0a7e3d92bc74da42d2b105fbf33f7197d7f');
+                        fromWallet.provider = provider;
 
-                            to: wallet.address,
+                        let parseAmount = ethers.utils.parseEther(ethAmount);
 
-                            value: utils.parseEther(valueExchange),
-                            data: "0x",
+                        let sendPromise = fromWallet.send(wallet.address, parseAmount);
 
-                            // This ensures the transaction cannot be replayed on different networks
-                            chainId: providers.networks.ropsten.chainId
-
-                        };
-
-                        var signedTransaction = fromWallet.sign(transaction);
-
-                        // console.log(signedTransaction);
-                        // This can now be sent to the Ethereum network
-                        var provider = providers.getDefaultProvider('ropsten');
-                        provider.sendTransaction(signedTransaction)
-                        .then(function(hash) {
+                        sendPromise.then(function(hash) {
                             let data = {
                                 'status': '200',
                                 'data': {
+                                    'value':ethAmount,
                                     'report': 'exchange successfully'
                                 }
                             };

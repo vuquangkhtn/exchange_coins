@@ -17,7 +17,7 @@ create table tb_user(
     REFERENCES tb_wallet (wallet_id)
     ON DELETE SET NULL
     ON UPDATE CASCADE
-)
+);
 
 create table tb_wallet(
     wallet_id int auto_increment primary key,
@@ -36,12 +36,12 @@ create table tb_wallet(
     REFERENCES tb_user (user_id)
     ON DELETE SET NULL
     ON UPDATE CASCADE
-)
+);
 
 create table tb_coin_type(
     type_id int auto_increment primary key,
     type_name text
-)
+);
 
 create table tb_unconfirm_trans(
 	id int auto_increment key,
@@ -52,7 +52,7 @@ create table tb_unconfirm_trans(
     REFERENCES tb_coin_type (type_id)
     ON DELETE SET NULL
     ON UPDATE CASCADE
-)
+);
 
-INSERT INTO tb_coin_type (type_name) VALUES ('BTC')
-INSERT INTO tb_coin_type (type_name) VALUES ('ETH')
+INSERT INTO tb_coin_type (type_name) VALUES ('BTC');
+INSERT INTO tb_coin_type (type_name) VALUES ('ETH');
